@@ -45,6 +45,7 @@ parser.add_argument(
         "tuscon",
         "urban_corridor",
         "miniphoenix",
+        "restricted_phoenix"
     ],
 )
 parser.add_argument("--data_file", default="data/WRF_data_2013", type=str)
@@ -190,7 +191,7 @@ def inference_loop(seed, N_inducing, N_t):
         print(k, v.shape)
 
     print("Training Models")
-    model = training(model, verbose=True, iters=500, lr_adam=2e-1)
+    model = training(model, verbose=True, iters=150, lr_adam=2e-1)
 
     print("Evaluating Models")
     # Evaluate model performance
@@ -336,6 +337,10 @@ if __name__ == "__main__":
     errors_gt_1_at_30s = np.array(errors_gt_1_at_30s).reshape(
         (N_runs, len(N_sites_to_try))
     )
+
+    # If results doesn't exist, create the results directory
+    if not os.path.exists("results"):
+        os.makedirs("results")
 
     # Save results to files
     np.savez_compressed(

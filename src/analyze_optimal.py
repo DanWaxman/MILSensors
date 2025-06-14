@@ -51,7 +51,7 @@ parser.add_argument(
     "--dataset",
     default="phoenix",
     type=str,
-    choices=["phoenix", "arizona", "flagstaff", "tuscon", "miniphoenix"],
+    choices=["phoenix", "arizona", "flagstaff", "tuscon", "miniphoenix", "restricted_phoenix"],
     help="Dataset to analyze"
 )
 parser.add_argument("--use_random", default=False, type=bool,
