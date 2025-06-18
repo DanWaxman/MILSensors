@@ -75,7 +75,7 @@ class MarkovVariationalGP(
         )
         return jnp.squeeze(mean_y), jnp.squeeze(var_y)
 
-    def predict(self, X=None, R=None, pseudo_lik_params=None, variational_params=None):
+    def predict(self, X=None, R=None, pseudo_lik_params=None, variational_params=None, return_diag_cov_only=True):
         """
         Predict at new test locations X
         
@@ -155,7 +155,7 @@ class MarkovVariationalGP(
 
         # Deal with spatio-temporal case (discard spatial covariance)
         if (
-            self.spatio_temporal
+            self.spatio_temporal and return_diag_cov_only
         ):
             test_var = diag(test_var)
         return jnp.squeeze(test_mean), jnp.squeeze(test_var)
