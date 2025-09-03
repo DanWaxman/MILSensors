@@ -10,12 +10,8 @@ The module includes:
 - eval_model: Function to evaluate a trained model on test data, computing metrics like RMSE and NLPD
 """
 
-import bayesnewton
 import objax
 import time
-import numpy as np
-import data_helper
-import models
 import numpy as np
 from tqdm import tqdm
 
@@ -34,7 +30,7 @@ def training(
 ):
     """
     Train a Gaussian Process model using a combination of Newton's method and Adam.
-    
+
     Args:
         model: The GP model to train
         iters: Maximum number of training iterations
@@ -46,7 +42,7 @@ def training(
         early_stopping: Whether to stop training if loss increases
         optimize_all: Whether to optimize all parameters (if False, kernel parameters are fixed)
         verbose_iter: How often to print training progress
-        
+
     Returns:
         The trained model
     """
@@ -130,7 +126,7 @@ def eval_model(
 ):
     """
     Evaluate a trained GP model on test data.
-    
+
     Args:
         model: The trained GP model
         t_t: Test time points
@@ -143,7 +139,7 @@ def eval_model(
         N_minibatch: Size of mini-batches for prediction
         pseudo_lik_params: Optional pre-computed pseudo-likelihood parameters
         variational_params: Optional pre-computed variational parameters
-        
+
     Returns:
         rmse: Root mean squared error
         nlpd: Negative log predictive density

@@ -1,7 +1,7 @@
 """
 Helper functions for loading and processing temperature data.
 
-This module provides functions to load WRF (Weather Research and Forecasting) 
+This module provides functions to load WRF (Weather Research and Forecasting)
 temperature data, create training and testing datasets, and prepare the data
 for use with spatiotemporal Gaussian Process models.
 
@@ -28,7 +28,7 @@ def create_dataset(
 ):
     """
     Load temperature data and create training/testing datasets.
-    
+
     Args:
         random_seed: Random seed for reproducibility
         N_obs_pts: Number of observation points to sample (-1 for all available)
@@ -39,7 +39,7 @@ def create_dataset(
         data_file: Path to the data file
         N_fixed: Number of fixed observation locations
         N_t_start: Starting time index
-        
+
     Returns:
         X: Training inputs (time, lat, lon)
         Y: Training targets (temperature)
@@ -54,24 +54,26 @@ def create_dataset(
     """
     # Load data from CSV or NPZ file
     if data_file.endswith("csv"):
-        WRF_data_raw = pd.read_csv(data_file,                   
-                    delimiter=r"\s+",
-                   header= None, 
-                   names=
-                   ['Urban point identifier',
-                        'latitude',
-                        'longitude',
-                        'Land Use-Land Cover',
-                        'albedo',
-                        'emissivity',
-                        'Air Temperature at 2m',
-                        'Surface (Skin) Temperature',
-                        'Water Vapor Mixing Ratio',
-                        'Wind Speed',
-                        'Shortwave downwelling',
-                        'Longwave downwelling',
-                        'Pressure']
-                   )
+        WRF_data_raw = pd.read_csv(
+            data_file,
+            delimiter=r"\s+",
+            header=None,
+            names=[
+                "Urban point identifier",
+                "latitude",
+                "longitude",
+                "Land Use-Land Cover",
+                "albedo",
+                "emissivity",
+                "Air Temperature at 2m",
+                "Surface (Skin) Temperature",
+                "Water Vapor Mixing Ratio",
+                "Wind Speed",
+                "Shortwave downwelling",
+                "Longwave downwelling",
+                "Pressure",
+            ],
+        )
         # No time axis by default, make one which gives hours since midnight June 1st
         # 24*92=2208 total time instances
         # the data is formatted so that each site is repeated N_t times
@@ -112,16 +114,20 @@ def create_dataset(
             WRF_df = WRF_data_raw
 
         elif dataset == "restricted_phoenix":
-            rectangle_1_query = (WRF_data_raw["longitude"] > -112.2) \
-                & (WRF_data_raw["longitude"] < -111.84) \
-                & (WRF_data_raw["latitude"] > 33.4) \
+            rectangle_1_query = (
+                (WRF_data_raw["longitude"] > -112.2)
+                & (WRF_data_raw["longitude"] < -111.84)
+                & (WRF_data_raw["latitude"] > 33.4)
                 & (WRF_data_raw["latitude"] < 33.56)
+            )
 
-            rectangle_2_query = (WRF_data_raw["longitude"] > -112.0) \
-                & (WRF_data_raw["longitude"] < -111.6) \
-                & (WRF_data_raw["latitude"] > 33.26) \
+            rectangle_2_query = (
+                (WRF_data_raw["longitude"] > -112.0)
+                & (WRF_data_raw["longitude"] < -111.6)
+                & (WRF_data_raw["latitude"] > 33.26)
                 & (WRF_data_raw["latitude"] < 33.44)
-            
+            )
+
             WRF_df = WRF_data_raw[rectangle_1_query | rectangle_2_query]
         else:
             raise NotImplementedError
@@ -174,7 +180,7 @@ def create_dataset(
     # Extract training data
     X = air_temp_timeseries[N_t_start : N_t + N_t_start, sample_points, 0:3]
     Y = air_temp_timeseries[N_t_start : N_t + N_t_start, sample_points, 3]
-    
+
     # Add noise to temps if specified
     if obs_noise > 0:
         Y = Y + np.random.randn(*Y.shape) * obs_noise / stds[3]
@@ -207,7 +213,7 @@ def create_dataset(
 def make_grid(X, Y, X_t, Y_t, air_temp_timeseries, N_t, mus, stds, N_sites):
     """
     Convert data into spatiotemporal grid format for GP models.
-    
+
     Args:
         X: Training inputs
         Y: Training targets
@@ -218,7 +224,7 @@ def make_grid(X, Y, X_t, Y_t, air_temp_timeseries, N_t, mus, stds, N_sites):
         mus: Mean values for normalization
         stds: Standard deviations for normalization
         N_sites: Number of spatial locations
-        
+
     Returns:
         X: Original training inputs
         Y: Original training targets

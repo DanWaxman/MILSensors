@@ -442,9 +442,7 @@ class SpatioTemporalPartialOptKernel(bayesnewton.kernels.SpatioTemporalKernel):
         (
             Qzz,
             Lzz,
-        ) = (
-            self.inducing_precision()
-        )  # pre-calculate inducing precision and its Cholesky factor
+        ) = self.inducing_precision()  # pre-calculate inducing precision and its Cholesky factor
         if self.sparse or predict:
             # TODO: save compute if R is constant:
             # gridded_data = np.all(np.abs(np.diff(R, axis=0)) < 1e-10)

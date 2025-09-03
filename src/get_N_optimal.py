@@ -45,7 +45,7 @@ parser.add_argument(
         "tuscon",
         "urban_corridor",
         "miniphoenix",
-        "restricted_phoenix"
+        "restricted_phoenix",
     ],
 )
 parser.add_argument("--data_file", default="data/WRF_data_2013", type=str)
@@ -80,10 +80,10 @@ from train_and_eval import training, eval_model
 import warnings
 
 import bayesnewton
-from kernels import *
+from kernels import SubbandMatern32
 
 import numpy as np
-import matplotlib.pyplot as plt
+import jax.numpy as jnp
 
 N_sites_to_try = args.N_sites_to_try
 N_runs = args.N_runs
@@ -95,12 +95,12 @@ N_t = args.N_t
 def inference_loop(seed, N_inducing, N_t):
     """
     Run a single inference loop with a specific number of inducing points
-    
+
     Args:
         seed: Random seed for reproducibility
         N_inducing: Number of inducing points to use
         N_t: Number of time points
-        
+
     Returns:
         Various model parameters, metrics, and results from training and evaluation
     """
@@ -305,29 +305,33 @@ if __name__ == "__main__":
 
             # Store kernel parameters based on spatial kernel type
             if args.spatial_kern == "sepmatern32":
-                kernel_params.append([
-                    model.kernel.temporal_kernel.kernel0.lengthscale,
-                    model.kernel.temporal_kernel.kernel0.radial_frequency,
-                    model.kernel.temporal_kernel.kernel0.variance,
-                    model.kernel.temporal_kernel.kernel1.lengthscale,
-                    model.kernel.temporal_kernel.kernel1.variance,
-                    model.kernel.spatial_kernel.kernel0.variance,
-                    model.kernel.spatial_kernel.kernel0.lengthscale,
-                    model.kernel.spatial_kernel.kernel1.variance,
-                    model.kernel.spatial_kernel.kernel1.lengthscale,
-                    model.likelihood.variance,
-                ])
+                kernel_params.append(
+                    [
+                        model.kernel.temporal_kernel.kernel0.lengthscale,
+                        model.kernel.temporal_kernel.kernel0.radial_frequency,
+                        model.kernel.temporal_kernel.kernel0.variance,
+                        model.kernel.temporal_kernel.kernel1.lengthscale,
+                        model.kernel.temporal_kernel.kernel1.variance,
+                        model.kernel.spatial_kernel.kernel0.variance,
+                        model.kernel.spatial_kernel.kernel0.lengthscale,
+                        model.kernel.spatial_kernel.kernel1.variance,
+                        model.kernel.spatial_kernel.kernel1.lengthscale,
+                        model.likelihood.variance,
+                    ]
+                )
             else:
-                kernel_params.append([
-                    model.kernel.temporal_kernel.kernel0.lengthscale,
-                    model.kernel.temporal_kernel.kernel0.radial_frequency,
-                    model.kernel.temporal_kernel.kernel0.variance,
-                    model.kernel.temporal_kernel.kernel1.lengthscale,
-                    model.kernel.temporal_kernel.kernel1.variance,
-                    model.kernel.spatial_kernel.variance,
-                    model.kernel.spatial_kernel.lengthscale,
-                    model.likelihood.variance,
-                ])
+                kernel_params.append(
+                    [
+                        model.kernel.temporal_kernel.kernel0.lengthscale,
+                        model.kernel.temporal_kernel.kernel0.radial_frequency,
+                        model.kernel.temporal_kernel.kernel0.variance,
+                        model.kernel.temporal_kernel.kernel1.lengthscale,
+                        model.kernel.temporal_kernel.kernel1.variance,
+                        model.kernel.spatial_kernel.variance,
+                        model.kernel.spatial_kernel.lengthscale,
+                        model.likelihood.variance,
+                    ]
+                )
 
             post_covs.append(model.get_variational_cov())
             post_means.append(model.get_variational_mean())

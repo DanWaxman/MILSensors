@@ -1,46 +1,20 @@
-import models
-from kernels import *
-import warnings
-from train_and_eval import training, eval_model
 import contextily as cx
 import osmnx as ox
-from jax.scipy.linalg import cho_factor, cho_solve, block_diag, expm
-import jax.numpy as jnp
-from bayesnewton.utils import (
-    scaled_squared_euclid_dist,
-    softplus,
-    softplus_inv,
-    rotation_matrix,
-)
 import bayesnewton
-import objax
 import numpy as np
 import pickle
-import time
-import sys
-from scipy.cluster.vq import kmeans2
-from jax.lib import xla_bridge
-import pandas as pd
 
 import matplotlib.pyplot as plt
-import seaborn as sns
-import jax
-from jax import config
-from tqdm import tqdm
 
-from pyproj import Transformer
 
-from tensorflow_probability.substrates.jax.math import bessel_ive
 import argparse
 import data_helper
-from scipy.stats import qmc
-from scipy.optimize import linear_sum_assignment
 
-import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from collections import defaultdict
 from matplotlib.transforms import Affine2D
 
+from matplotlib.colors import to_rgb, to_hex
 
 import os
 
@@ -60,12 +34,27 @@ parser.add_argument(
     "--dataset",
     default="phoenix",
     type=str,
-    choices=["phoenix", "arizona", "flagstaff", "tuscon", "miniphoenix", "arizona_refined", "restricted_phoenix"],
+    choices=[
+        "phoenix",
+        "arizona",
+        "flagstaff",
+        "tuscon",
+        "miniphoenix",
+        "arizona_refined",
+        "restricted_phoenix",
+    ],
 )
-parser.add_argument("--data_file", default="../data/WRF_data_2013_and_2023_full.npz", type=str)
+parser.add_argument(
+    "--data_file", default="../data/WRF_data_2013_and_2023_full.npz", type=str
+)
 parser.add_argument("--use_random", default=False, type=bool)
 parser.add_argument("--N_runs_to_show", default=1, type=int)
-parser.add_argument("--spatial_kern", default="matern32", type=str, choices=["matern32", "sepmatern32", "deepmatern32"])
+parser.add_argument(
+    "--spatial_kern",
+    default="matern32",
+    type=str,
+    choices=["matern32", "sepmatern32", "deepmatern32"],
+)
 parser.add_argument("--noise_level", default=0.1, type=float)
 
 args = parser.parse_args()
@@ -85,7 +74,6 @@ use_optimal_points = not args.use_random
 
 np.random.seed(1)
 
-import pickle
 
 with open(
     f"results/N_fixed_optimal_Z_{args.dataset}_subbandmix_{args.noise_level}_{'_'.join([str(n) for n in args.N_sites_to_try])}",
@@ -185,12 +173,19 @@ plt.clf()
 
 Zs = [np.array(z_init[i]) * stds[1:3] + mus[1:3] for i in range(args.N_runs_to_show)]
 
-Zps_opt = [np.array(z_opt[i]) * stds[1:3] + mus[1:3] for i in range(args.N_runs_to_show)]
+Zps_opt = [
+    np.array(z_opt[i]) * stds[1:3] + mus[1:3] for i in range(args.N_runs_to_show)
+]
 
 # Save off modified optimal points in CSV
 for i in range(args.N_runs_to_show):
     Z_opt = np.array(z_opt[i]) * stds[1:3] + mus[1:3]
-    np.savetxt(f"results/2013_{args.dataset}_{args.N_sites_to_try[0]}_optimal_pts_{i}.csv", Z_opt, delimiter=",", fmt='%f')
+    np.savetxt(
+        f"results/2013_{args.dataset}_{args.N_sites_to_try[0]}_optimal_pts_{i}.csv",
+        Z_opt,
+        delimiter=",",
+        fmt="%f",
+    )
 
 Zps = []
 
@@ -334,8 +329,6 @@ plt.scatter(
 )
 plt.scatter([], [], edgecolor="black", facecolor="None", label="Optimized Points")
 
-
-from matplotlib.colors import to_rgb, to_hex
 
 # Original colors
 fun_colors = ["#0072B2", "#E69F00", "#CC79A7"]

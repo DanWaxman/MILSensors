@@ -11,21 +11,12 @@ The script visualizes results and saves performance metrics for further analysis
 """
 
 import models
-from kernels import *
-import warnings
+from kernels import SubbandMatern32
 from train_and_eval import training, eval_model
-import jax.numpy as jnp
-from bayesnewton.utils import softplus, softplus_inv
 import bayesnewton
-import objax
 import numpy as np
 import pickle
-from scipy.cluster.vq import kmeans2
-import pandas as pd
 import matplotlib.pyplot as plt
-import jax
-from jax import config
-from tqdm import tqdm
 from scipy.stats import qmc
 import argparse
 import os
@@ -38,43 +29,60 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Gaussian Process example")
 
-parser.add_argument("--N_runs", nargs="?", default=10, type=int, 
-                   help="Number of runs to analyze")
+parser.add_argument(
+    "--N_runs", nargs="?", default=10, type=int, help="Number of runs to analyze"
+)
 parser.add_argument(
     "--N_sites_to_try",
     nargs="+",
     default=[5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60],
     type=int,
-    help="Number of inducing points to analyze"
+    help="Number of inducing points to analyze",
 )
 parser.add_argument(
     "--dataset",
     default="phoenix",
     type=str,
-    choices=["phoenix", "arizona", "flagstaff", "tuscon", "miniphoenix", "restricted_phoenix"],
-    help="Dataset to analyze"
+    choices=[
+        "phoenix",
+        "arizona",
+        "flagstaff",
+        "tuscon",
+        "miniphoenix",
+        "restricted_phoenix",
+    ],
+    help="Dataset to analyze",
 )
-parser.add_argument("--use_random", default=False, type=bool,
-                   help="Whether to use random points instead of optimal points")
-parser.add_argument('--use_lhs', default=False, type=bool,
-                   help="Whether to use LHS instead of random points")
+parser.add_argument(
+    "--use_random",
+    default=False,
+    type=bool,
+    help="Whether to use random points instead of optimal points",
+)
+parser.add_argument(
+    "--use_lhs",
+    default=False,
+    type=bool,
+    help="Whether to use LHS instead of random points",
+)
 
 args = parser.parse_args()
 
 # Configuration settings
 mean_field = False  # Whether to use mean-field approximation
-parallel = True     # Whether to use parallel computation
-N_t = 24 * 30       # Number of time points to use (24 hours * 30 days)
-N_t_start = 61 * 24 # Starting time index (61 days * 24 hours)
+parallel = True  # Whether to use parallel computation
+N_t = 24 * 30  # Number of time points to use (24 hours * 30 days)
+N_t_start = 61 * 24  # Starting time index (61 days * 24 hours)
 moving_points = False  # Whether to use moving points
 
-use_optimal_points = not args.use_random  # Use optimal points unless random is specified
+use_optimal_points = (
+    not args.use_random
+)  # Use optimal points unless random is specified
 use_lhs = args.use_lhs  # Use LHS instead of random points
 
 np.random.seed(1)  # Set random seed for reproducibility
 
 # Load previously saved results from get_N_optimal.py
-import pickle
 
 # Load optimal inducing points
 with open(
@@ -119,11 +127,11 @@ with open(
     variational_means = pickle.load(f)
 
 # Initialize results storage
-results_errors_gt_1 = []          # Errors greater than 1°C
-pseudo_var_results = []           # RMSE results using pseudo-likelihood parameters
-variational_var_results = []      # RMSE results using variational parameters
-pseudo_var_nlpd_results = []      # NLPD results using pseudo-likelihood parameters
-variational_var_nlpd_results = [] # NLPD results using variational parameters
+results_errors_gt_1 = []  # Errors greater than 1°C
+pseudo_var_results = []  # RMSE results using pseudo-likelihood parameters
+variational_var_results = []  # RMSE results using variational parameters
+pseudo_var_nlpd_results = []  # NLPD results using pseudo-likelihood parameters
+variational_var_nlpd_results = []  # NLPD results using variational parameters
 
 # Analyze each set of inducing points
 for i in range(len(z_opt)):
@@ -321,7 +329,7 @@ for i in range(len(z_opt)):
             Y,
             R,
             t,
-            k_l_v, 
+            k_l_v,
             kern_time,
             kern_space,
             opt_z=False,
@@ -362,7 +370,6 @@ for i in range(len(z_opt)):
     print(model.kernel.z.value)
     print(optimal_points)
 
-
     plt.clf()
     plt.plot(Y.squeeze()[:, 3], label="Y")
     plt.plot(model.posterior_mean.value.squeeze()[:, 3], label="posterior_mean")
@@ -397,7 +404,7 @@ for i in range(len(z_opt)):
     diff = (nat1.squeeze() - pseudo_y.squeeze()).reshape(-1, 24, N_obs_pts).mean(1)
     print("diff", diff)
     with open(
-        f"../results/diff",
+        "../results/diff",
         "wb",
     ) as handle:
         pickle.dump(diff, handle, protocol=pickle.HIGHEST_PROTOCOL)
