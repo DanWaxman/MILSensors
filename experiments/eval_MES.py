@@ -1,15 +1,14 @@
-import os
-from milsensors import models
-from milsensors.kernels import SubbandMatern32
-from milsensors.train_and_eval import training
-import bayesnewton
-from milsensors import data_helper
-import numpy as np
-
 import argparse
+import os
 import re
 
+import bayesnewton
 import jax
+import numpy as np
+
+from milsensors import data_helper, models
+from milsensors.kernels import SubbandMatern32
+from milsensors.train_and_eval import training
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

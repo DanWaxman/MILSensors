@@ -10,9 +10,10 @@ The module includes:
 - eval_model: Function to evaluate a trained model on test data, computing metrics like RMSE and NLPD
 """
 
-import objax
 import time
+
 import numpy as np
+import objax
 from tqdm import tqdm
 
 

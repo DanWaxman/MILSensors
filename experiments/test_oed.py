@@ -1,15 +1,13 @@
-import models
-from kernels import SubbandMatern32
-from train_and_eval import training
-import bayesnewton
-from scipy.cluster.vq import kmeans2
-import data_helper
-import numpy as np
-
-from bayes_oed import get_posterior_predictive_logdet, get_posterior_predictive_tr
-
-
 import argparse
+
+import bayesnewton
+import data_helper
+import models
+import numpy as np
+from bayes_oed import get_posterior_predictive_logdet, get_posterior_predictive_tr
+from kernels import SubbandMatern32
+from scipy.cluster.vq import kmeans2
+from train_and_eval import training
 
 parser = argparse.ArgumentParser(description="Gaussian Process example")
 

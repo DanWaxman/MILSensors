@@ -14,12 +14,12 @@ The script:
 Command line arguments allow customization of the experiment parameters.
 """
 
-import os
-
 # It's important this runs at the top and not in the main block
 # because of a pecularity in how jax allocates devices
 import argparse
+import os
 import pickle
+
 from scipy.cluster.vq import kmeans2
 
 # Make sure to include cublas and cuda_runtime in the LD_LIBRARY_PATH
@@ -68,22 +68,20 @@ args = parser.parse_args()
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = args.device_num
 
-from tqdm import tqdm
-
 from jax import config
+from tqdm import tqdm
 
 config.update("jax_enable_x64", True)
 
-from milsensors import data_helper
-from milsensors import models
-from milsensors.train_and_eval import training, eval_model
 import warnings
 
 import bayesnewton
-from milsensors.kernels import SubbandMatern32
-
-import numpy as np
 import jax.numpy as jnp
+import numpy as np
+
+from milsensors import data_helper, models
+from milsensors.kernels import SubbandMatern32
+from milsensors.train_and_eval import eval_model, training
 
 N_sites_to_try = args.N_sites_to_try
 N_runs = args.N_runs

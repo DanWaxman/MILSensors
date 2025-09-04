@@ -10,16 +10,18 @@ different methods for using the inducing points:
 The script visualizes results and saves performance metrics for further analysis.
 """
 
-from milsensors import models
-from milsensors.kernels import SubbandMatern32
-from train_and_eval import training, eval_model
-import bayesnewton
-import numpy as np
-import pickle
-import matplotlib.pyplot as plt
-from scipy.stats import qmc
 import argparse
 import os
+import pickle
+
+import bayesnewton
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import qmc
+from train_and_eval import eval_model, training
+
+from milsensors import models
+from milsensors.kernels import SubbandMatern32
 
 # Set GPU device
 # Should maybe do this via command line argument...

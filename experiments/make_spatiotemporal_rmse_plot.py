@@ -14,26 +14,23 @@ The script uses OpenStreetMap as a base layer for the spatial plots to provide
 geographical context. Results are saved as high-resolution PNG and PDF files.
 """
 
-from milsensors import models
-from milsensors.kernels import SubbandMatern32
-from milsensors.train_and_eval import training, eval_model
-import contextily as cx
-import osmnx as ox
-import bayesnewton
-import numpy as np
+import argparse
+import os
 import pickle
 
+import bayesnewton
+import contextily as cx
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
+import osmnx as ox
 import seaborn as sns
+import uncertainty_toolbox as uct
 from jax import config
 
-
-import argparse
-
-
-import os
-import uncertainty_toolbox as uct
+from milsensors import models
+from milsensors.kernels import SubbandMatern32
+from milsensors.train_and_eval import eval_model, training
 
 # Set GPU device
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"

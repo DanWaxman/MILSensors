@@ -1,22 +1,18 @@
-import contextily as cx
-import osmnx as ox
-import bayesnewton
-import numpy as np
-import pickle
-
-import matplotlib.pyplot as plt
-
-
 import argparse
-from milsensors import data_helper
-
-import matplotlib.patches as patches
+import os
+import pickle
 from collections import defaultdict
+
+import bayesnewton
+import contextily as cx
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
+import osmnx as ox
+from matplotlib.colors import to_hex, to_rgb
 from matplotlib.transforms import Affine2D
 
-from matplotlib.colors import to_rgb, to_hex
-
-import os
+from milsensors import data_helper
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"

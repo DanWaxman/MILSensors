@@ -9,20 +9,20 @@ The kernels in this file are particularly focused on state-space representations
 of Gaussian processes, including quasi-periodic and subband formulations.
 """
 
-import jax.numpy as jnp
+from warnings import warn
+
 import bayesnewton
+import jax.numpy as jnp
 import objax
 from bayesnewton.utils import (
+    rotation_matrix,
+    scaled_squared_euclid_dist,
     softplus,
     softplus_inv,
     square_distance,
-    scaled_squared_euclid_dist,
-    rotation_matrix,
 )
-from jax.scipy.linalg import block_diag
-from warnings import warn
 from jax import vmap
-from jax.scipy.linalg import cho_factor, cho_solve
+from jax.scipy.linalg import block_diag, cho_factor, cho_solve
 
 
 class QuasiPeriodicMatern32(bayesnewton.kernels.Kernel):

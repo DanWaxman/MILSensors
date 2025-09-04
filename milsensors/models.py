@@ -9,12 +9,13 @@ It includes:
 """
 
 import bayesnewton
-from scipy.cluster.vq import kmeans2
-import numpy as np
-from milsensors import kernels
-import jax.numpy as jnp
 import jax
-from bayesnewton.utils import transpose, diag
+import jax.numpy as jnp
+import numpy as np
+from bayesnewton.utils import diag, transpose
+from scipy.cluster.vq import kmeans2
+
+from milsensors import kernels
 
 
 class MarkovVariationalGP(

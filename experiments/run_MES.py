@@ -1,19 +1,19 @@
-import sys
+import argparse
 import os
-from milsensors import models
-from milsensors.kernels import SubbandMatern32
-from milsensors.train_and_eval import training
-import bayesnewton
-from scipy.cluster.vq import kmeans2
-from milsensors import data_helper
-import numpy as np
+import sys
 
-from milsensors.bayes_oed import get_posterior_predictive_logdet
-from tqdm import trange
-from scipy.spatial import ConvexHull  # only needed once
+import bayesnewton
 import jax
 import jax.numpy as jnp
-import argparse
+import numpy as np
+from scipy.cluster.vq import kmeans2
+from scipy.spatial import ConvexHull  # only needed once
+from tqdm import trange
+
+from milsensors import data_helper, models
+from milsensors.bayes_oed import get_posterior_predictive_logdet
+from milsensors.kernels import SubbandMatern32
+from milsensors.train_and_eval import training
 
 parser = argparse.ArgumentParser(description="Maximum Entropy Sampling (MES)")
 parser.add_argument("--N_init", nargs="?", default=5, type=int)

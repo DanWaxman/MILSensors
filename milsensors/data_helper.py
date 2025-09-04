@@ -10,9 +10,9 @@ The module includes:
 - make_grid: Function to convert data into spatiotemporal grid format
 """
 
+import bayesnewton
 import numpy as np
 import pandas as pd
-import bayesnewton
 
 
 def create_dataset(

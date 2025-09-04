@@ -1,21 +1,19 @@
-import os
-from milsensors import models
-from milsensors.kernels import SubbandMatern32
-from milsensors.train_and_eval import training
-import bayesnewton
-from scipy.cluster.vq import kmeans2
-from milsensors import data_helper
-import numpy as np
-from bayesnewton.basemodels import MarkovGaussianProcess
-
-
 import argparse
+import os
 
+import bayesnewton
 import jax
 import jax.numpy as jnp
-
-from tqdm import trange
+import numpy as np
+from bayesnewton.basemodels import MarkovGaussianProcess
+from scipy.cluster.vq import kmeans2
 from scipy.spatial import ConvexHull  # only needed once
+from tqdm import trange
+
+from milsensors import data_helper, models
+from milsensors.kernels import SubbandMatern32
+from milsensors.train_and_eval import training
+
 # config.update("jax_enable_x64", True)
 
 
