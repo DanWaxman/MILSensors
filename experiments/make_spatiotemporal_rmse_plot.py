@@ -14,42 +14,23 @@ The script uses OpenStreetMap as a base layer for the spatial plots to provide
 geographical context. Results are saved as high-resolution PNG and PDF files.
 """
 
-import models
-from kernels import *
-import warnings
-from train_and_eval import training, eval_model
+from milsensors import models
+from milsensors.kernels import SubbandMatern32
+from milsensors.train_and_eval import training, eval_model
 import contextily as cx
 import osmnx as ox
-from jax.scipy.linalg import cho_factor, cho_solve, block_diag, expm
-import jax.numpy as jnp
-from bayesnewton.utils import (
-    scaled_squared_euclid_dist,
-    softplus,
-    softplus_inv,
-    rotation_matrix,
-)
 import bayesnewton
-import objax
 import numpy as np
 import pickle
-import time
-import sys
-from scipy.cluster.vq import kmeans2
-from jax.lib import xla_bridge
-import pandas as pd
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
-import jax
 from jax import config
-from tqdm import tqdm
 
-from pyproj import Transformer
 
-from tensorflow_probability.substrates.jax.math import bessel_ive
 import argparse
 
-from scipy.stats import qmc
 
 import os
 import uncertainty_toolbox as uct
@@ -61,26 +42,42 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 # Parse command line arguments
 parser = argparse.ArgumentParser(description="Gaussian Process example")
 
-parser.add_argument("--N_runs", nargs="?", default=10, type=int,
-                   help="Number of runs to analyze")
+parser.add_argument(
+    "--N_runs", nargs="?", default=10, type=int, help="Number of runs to analyze"
+)
 parser.add_argument(
     "--N_sites_to_try",
     nargs="+",
     default=[5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60],
     type=int,
-    help="Number of inducing points to analyze"
+    help="Number of inducing points to analyze",
 )
 parser.add_argument(
     "--dataset",
     default="phoenix",
     type=str,
-    choices=["phoenix", "arizona", "flagstaff", "tuscon", "miniphoenix"],
-    help="Dataset to analyze"
+    choices=[
+        "phoenix",
+        "arizona",
+        "flagstaff",
+        "tuscon",
+        "miniphoenix",
+        "restricted_phoenix",
+    ],
+    help="Dataset to analyze",
 )
-parser.add_argument("--use_random", default=False, type=bool,
-                   help="Whether to use random points instead of optimal points")
-parser.add_argument("--idx", default=1, type=int,
-                   help="Index of the model configuration to visualize")
+parser.add_argument(
+    "--use_random",
+    default=False,
+    type=bool,
+    help="Whether to use random points instead of optimal points",
+)
+parser.add_argument(
+    "--data_file", default="../data/WRF_data_2013_and_2023_full.npz", type=str
+)
+parser.add_argument(
+    "--idx", default=1, type=int, help="Index of the model configuration to visualize"
+)
 
 args = parser.parse_args()
 
@@ -89,48 +86,50 @@ config.update("jax_enable_x64", True)
 
 # Configuration settings
 mean_field = False  # Whether to use mean-field approximation
-parallel = True     # Whether to use parallel computation
-N_t = 24 * 30       # Number of time points to use (24 hours * 30 days)
-N_t_start = 61 * 24 # Starting time index (61 days * 24 hours)
+parallel = True  # Whether to use parallel computation
+N_t = 24 * 30  # Number of time points to use (24 hours * 30 days)
+N_t_start = 61 * 24  # Starting time index (61 days * 24 hours)
 moving_points = False  # Whether to use moving points
 
-use_optimal_points = not args.use_random  # Use optimal points unless random is specified
+use_optimal_points = (
+    not args.use_random
+)  # Use optimal points unless random is specified
 
 np.random.seed(1)  # Set random seed for reproducibility
 
 # Load previously saved results from get_N_optimal.py
 with open(
-    f"../results/N_fixed_optimal_Z_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
+    f"results/N_fixed_optimal_Z_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
     "rb",
 ) as f:
     z_opt = pickle.load(f)
 
 with open(
-    f"../results/N_fixed_optimal_nat1_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
+    f"results/N_fixed_optimal_nat1_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
     "rb",
 ) as f:
     nat1s = pickle.load(f)
 
 with open(
-    f"../results/N_fixed_optimal_nat2_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
+    f"results/N_fixed_optimal_nat2_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
     "rb",
 ) as f:
     nat2s = pickle.load(f)
 
 with open(
-    f"../results/N_fixed_optimal_kernel_hypers_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
+    f"results/N_fixed_optimal_kernel_hypers_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
     "rb",
 ) as f:
     kernel_hypers = pickle.load(f)
 
 with open(
-    f"../results/N_fixed_optimal_post_covs_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
+    f"results/N_fixed_optimal_post_covs_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
     "rb",
 ) as f:
     variational_covs = pickle.load(f)
 
 with open(
-    f"../results/N_fixed_optimal_post_means_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
+    f"results/N_fixed_optimal_post_means_{args.dataset}_subbandmix_0.1_{'_'.join([str(n) for n in args.N_sites_to_try])}",
     "rb",
 ) as f:
     variational_means = pickle.load(f)
@@ -147,9 +146,7 @@ print(f"######## N_obs = {N_obs_pts} #########")
 print("##########################")
 
 # Load temperature data for Phoenix
-air_temp_timeseries = np.load("../data/WRF_data_2013_phoenix.npz")[
-    "air_temp_timeseries"
-]
+air_temp_timeseries = np.load(args.data_file)["air_temp_timeseries"]
 N_sites = air_temp_timeseries.shape[1]
 
 # Select random points for example time series plots
@@ -243,9 +240,7 @@ t, R, Y = bayesnewton.utils.create_spatiotemporal_grid(X, Y)
 t_t, R_t, Y_t = bayesnewton.utils.create_spatiotemporal_grid(X_t, Y_t)
 
 # Calculate temperatures > 30°C for error analysis
-temps_gt_30 = (mus[3] + stds[3] * air_temp_timeseries[:N_t, :, 3]).reshape(
-    (-1, 1)
-) > 30
+temps_gt_30 = (mus[3] + stds[3] * air_temp_timeseries[:N_t, :, 3]).reshape((-1, 1)) > 30
 N_rt = R_t.shape[1]
 
 # Extract kernel hyperparameters
@@ -372,17 +367,19 @@ uct.plot_calibration(
 )
 plt.savefig("MiscalibrationPlot.pdf")
 
+
 # Function to truncate color map for better visualization
 def truncate_colormap(cmapIn="jet", minval=0.0, maxval=1.0, n=100):
     """truncate_colormap(cmapIn='jet', minval=0.0, maxval=1.0, n=100)"""
     cmapIn = plt.get_cmap(cmapIn)
 
-    new_cmap = colors.LinearSegmentedColormap.from_list(
+    new_cmap = mpl.colors.LinearSegmentedColormap.from_list(
         "trunc({n},{a:.2f},{b:.2f})".format(n=cmapIn.name, a=minval, b=maxval),
         cmapIn(np.linspace(minval, maxval, n)),
     )
 
     return new_cmap
+
 
 # Create RMSE map
 plt.clf()
@@ -425,7 +422,7 @@ xs, ys = (
     R_t[0, np.array(random_idxs), 0] * stds[1] + mus[1],
 )
 for i in range(len(random_idxs)):
-    plt.scatter(xs[i], ys[i], marker=f"${i+1}$", color="black", s=27, lw=0.5)
+    plt.scatter(xs[i], ys[i], marker=f"${i + 1}$", color="black", s=27, lw=0.5)
 
 plt.title("RMSE (deg C)", fontsize=10)
 
@@ -531,7 +528,7 @@ xs, ys = (
     R_t[0, np.array(random_idxs), 0] * stds[1] + mus[1],
 )
 for i in range(len(random_idxs)):
-    plt.scatter(xs[i], ys[i], marker=f"${i+1}$", color="black", s=27, lw=0.5)
+    plt.scatter(xs[i], ys[i], marker=f"${i + 1}$", color="black", s=27, lw=0.5)
 
 plt.title("Maximum Errors", fontsize=10)
 
@@ -603,7 +600,7 @@ for i, random_idx in enumerate(random_idxs):
             color=c,
         )
     ax1.plot(np.arange(3 * 24), post_mean, color=c_dark, label="GP Prediction")
-    
+
     # Plot true data
     ax1.plot(
         Y_t[start_day * 24 + GMT_OFFSET : end_day * 24 + GMT_OFFSET, random_idx, 3]
@@ -619,7 +616,7 @@ for i, random_idx in enumerate(random_idxs):
 
     # Add title
     ax1.set_title(
-        f"Example {i+1}\nAugust {start_day+1} to August {end_day+1}", fontsize=10
+        f"Example {i + 1}\nAugust {start_day + 1} to August {end_day + 1}", fontsize=10
     )
 
     # Add y-label to leftmost plot only
@@ -648,7 +645,7 @@ for i, random_idx in enumerate(random_idxs):
     ax2.plot(
         [0, (end_day - start_day) * 24], [1, 1], linewidth=2, c="black", linestyle="--"
     )
-    
+
     # Plot errors
     ax2.scatter(range((end_day - start_day) * 24), errs, s=10, c=colors)
     ax2.plot(range((end_day - start_day) * 24), errs, c="black")
@@ -658,7 +655,7 @@ for i, random_idx in enumerate(random_idxs):
     if i == 0:
         ax2.set_ylabel("Error (deg C)", fontsize=8)
 
-    ax2.set_xlabel(f"Hours Since\nMidnight August {start_day+1}", fontsize=8)
+    ax2.set_xlabel(f"Hours Since\nMidnight August {start_day + 1}", fontsize=8)
     ax2.tick_params(labelsize=6)
 
 # Adjust layout

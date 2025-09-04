@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 
 import argparse
-import data_helper
+from milsensors import data_helper
 
 import matplotlib.patches as patches
 from collections import defaultdict

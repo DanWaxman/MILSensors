@@ -11,7 +11,7 @@ It includes:
 import bayesnewton
 from scipy.cluster.vq import kmeans2
 import numpy as np
-import kernels
+from milsensors import kernels
 import jax.numpy as jnp
 import jax
 from bayesnewton.utils import transpose, diag

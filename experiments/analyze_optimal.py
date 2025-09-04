@@ -10,8 +10,8 @@ different methods for using the inducing points:
 The script visualizes results and saves performance metrics for further analysis.
 """
 
-import models
-from kernels import SubbandMatern32
+from milsensors import models
+from milsensors.kernels import SubbandMatern32
 from train_and_eval import training, eval_model
 import bayesnewton
 import numpy as np

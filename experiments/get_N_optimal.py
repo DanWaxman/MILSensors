@@ -74,13 +74,13 @@ from jax import config
 
 config.update("jax_enable_x64", True)
 
-import data_helper
-import models
-from train_and_eval import training, eval_model
+from milsensors import data_helper
+from milsensors import models
+from milsensors.train_and_eval import training, eval_model
 import warnings
 
 import bayesnewton
-from kernels import SubbandMatern32
+from milsensors.kernels import SubbandMatern32
 
 import numpy as np
 import jax.numpy as jnp

@@ -144,6 +144,8 @@ def create_dataset(
     elif data_file.endswith("npz"):
         air_temp_timeseries = np.load(data_file)["air_temp_timeseries"]
         N_sites = air_temp_timeseries.shape[1]
+    else:
+        raise ValueError("Unrecognized file format (must be .csv or .npz)")
 
     # Standardize data for GPs
     mus = np.mean(air_temp_timeseries, axis=(0, 1))
