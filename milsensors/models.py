@@ -8,6 +8,8 @@ It includes:
 - Helper functions to create different types of GP models with various kernels
 """
 
+from typing import Optional, Tuple, Union
+
 import bayesnewton
 import jax
 import jax.numpy as jnp
@@ -22,41 +24,48 @@ class MarkovVariationalGP(
     bayesnewton.inference.VariationalInference,
     bayesnewton.basemodels.MarkovGaussianProcess,
 ):
-    """
-    Markov variational Gaussian process: a VGP where the posterior is computed via
-    (spatio-temporal) filtering and smoothing [1]. Based on the BayesNewton implementation, but allowing for prediction-time specification of variational parameters and pseudo-likelihood parameters.
+    """Markov variational Gaussian process: a VGP where the posterior is computed via (spatio-temporal) filtering and smoothing.
+    
+    Based on the BayesNewton implementation, but allowing for prediction-time specification of variational parameters and pseudo-likelihood parameters.
 
-    Args:
-        kernel: A kernel object
-        likelihood: A likelihood object
-        X: Inputs
-        Y: Observations
-        R: Spatial inputs
-        parallel: Boolean determining whether to run parallel filtering
+    :param kernel: A kernel object
+    :param likelihood: A likelihood object
+    :param X: Inputs
+    :param Y: Observations
+    :param R: Spatial inputs
+    :param parallel: Boolean determining whether to run parallel filtering
 
     References:
         [1] Chang, Wilkinson, Khan, Solin: Fast Variational Learning in State Space Gaussian Process Models, MLSP 2020
     """
 
-    def __init__(self, kernel, likelihood, X, Y, R=None, parallel=None):
+    def __init__(
+        self,
+        kernel: bayesnewton.kernels.Kernel,
+        likelihood: bayesnewton.likelihoods.Likelihood,
+        X: jnp.ndarray,
+        Y: jnp.ndarray,
+        R: Optional[jnp.ndarray] = None,
+        parallel: Optional[bool] = None,
+    ) -> None:
         super().__init__(kernel, likelihood, X, Y, R=R, parallel=parallel)
 
     def predict_y(
-        self, X, R=None, cubature=None, pseudo_lik_params=None, variational_params=None
-    ):
-        """
-        Predict y at new test locations X
+        self,
+        X: jnp.ndarray,
+        R: Optional[jnp.ndarray] = None,
+        cubature: Optional[object] = None,
+        pseudo_lik_params: Optional[Tuple[jnp.ndarray, jnp.ndarray]] = None,
+        variational_params: Optional[Tuple[jnp.ndarray, jnp.ndarray]] = None,
+    ) -> Tuple[jnp.ndarray, jnp.ndarray]:
+        """Predict y at new test locations X.
 
-        Args:
-            X: Test input locations
-            R: Test spatial locations
-            cubature: Optional cubature method for non-Gaussian likelihoods
-            pseudo_lik_params: Optional pre-computed pseudo-likelihood parameters
-            variational_params: Optional pre-computed variational parameters
-
-        Returns:
-            mean_y: Predicted mean values
-            var_y: Predicted variance values
+        :param X: Test input locations
+        :param R: Test spatial locations
+        :param cubature: Optional cubature method for non-Gaussian likelihoods
+        :param pseudo_lik_params: Optional pre-computed pseudo-likelihood parameters
+        :param variational_params: Optional pre-computed variational parameters
+        :returns: Tuple containing (mean_y, var_y) where mean_y is predicted mean values and var_y is predicted variance values
         """
         mean_f, var_f = self.predict(
             X,
@@ -76,24 +85,19 @@ class MarkovVariationalGP(
 
     def predict(
         self,
-        X=None,
-        R=None,
-        pseudo_lik_params=None,
-        variational_params=None,
-        return_diag_cov_only=True,
-    ):
-        """
-        Predict at new test locations X
+        X: Optional[jnp.ndarray] = None,
+        R: Optional[jnp.ndarray] = None,
+        pseudo_lik_params: Optional[Tuple[jnp.ndarray, jnp.ndarray]] = None,
+        variational_params: Optional[Tuple[jnp.ndarray, jnp.ndarray]] = None,
+        return_diag_cov_only: bool = True,
+    ) -> Tuple[jnp.ndarray, jnp.ndarray]:
+        """Predict at new test locations X.
 
-        Args:
-            X: Test input locations
-            R: Test spatial locations
-            pseudo_lik_params: Optional pre-computed pseudo-likelihood parameters
-            variational_params: Optional pre-computed variational parameters
-
-        Returns:
-            test_mean: Predicted mean values
-            test_var: Predicted variance values
+        :param X: Test input locations
+        :param R: Test spatial locations
+        :param pseudo_lik_params: Optional pre-computed pseudo-likelihood parameters
+        :param variational_params: Optional pre-computed variational parameters
+        :returns: Tuple containing (test_mean, test_var) where test_mean is predicted mean values and test_var is predicted variance values
         """
         if X is None:
             X = self.X
@@ -164,25 +168,26 @@ class MarkovVariationalGP(
             test_var = diag(test_var)
         return jnp.squeeze(test_mean), jnp.squeeze(test_var)
 
-    def get_variational_cov(self, X=None, R=None):
-        """Get the variational covariance at locations X, R"""
+    def get_variational_cov(
+        self, X: Optional[jnp.ndarray] = None, R: Optional[jnp.ndarray] = None
+    ) -> jnp.ndarray:
+        """Get the variational covariance at locations X, R."""
         return self.get_variational_params(X, R)[1]
 
-    def get_variational_mean(self, X=None, R=None):
-        """Get the variational mean at locations X, R"""
+    def get_variational_mean(
+        self, X: Optional[jnp.ndarray] = None, R: Optional[jnp.ndarray] = None
+    ) -> jnp.ndarray:
+        """Get the variational mean at locations X, R."""
         return self.get_variational_params(X, R)[0]
 
-    def get_variational_params(self, X=None, R=None):
-        """
-        Get the variational parameters at locations X, R
+    def get_variational_params(
+        self, X: Optional[jnp.ndarray] = None, R: Optional[jnp.ndarray] = None
+    ) -> Tuple[jnp.ndarray, jnp.ndarray]:
+        """Get the variational parameters at locations X, R.
 
-        Args:
-            X: Input locations
-            R: Spatial locations
-
-        Returns:
-            variational_mean: Mean of the variational distribution
-            variational_cov: Covariance of the variational distribution
+        :param X: Input locations
+        :param R: Spatial locations
+        :returns: Tuple containing (variational_mean, variational_cov) where variational_mean is mean of the variational distribution and variational_cov is covariance of the variational distribution
         """
         if X is None:
             X = self.X
@@ -226,20 +231,21 @@ class MarkovVariationalGP(
         return H @ state_mean, H @ state_cov @ transpose(H)
 
     def negative_log_predictive_density(
-        self, X, Y, R=None, cubature=None, variational_params=None
-    ):
-        """
-        Calculate the negative log predictive density at test locations
+        self,
+        X: jnp.ndarray,
+        Y: jnp.ndarray,
+        R: Optional[jnp.ndarray] = None,
+        cubature: Optional[object] = None,
+        variational_params: Optional[Tuple[jnp.ndarray, jnp.ndarray]] = None,
+    ) -> jnp.ndarray:
+        """Calculate the negative log predictive density at test locations.
 
-        Args:
-            X: Test input locations
-            Y: Test observations
-            R: Test spatial locations
-            cubature: Optional cubature method for non-Gaussian likelihoods
-            variational_params: Optional pre-computed variational parameters
-
-        Returns:
-            nlpd: Negative log predictive density
+        :param X: Test input locations
+        :param Y: Test observations
+        :param R: Test spatial locations
+        :param cubature: Optional cubature method for non-Gaussian likelihoods
+        :param variational_params: Optional pre-computed variational parameters
+        :returns: Negative log predictive density
         """
         predict_mean, predict_var = self.predict(
             X, R, variational_params=variational_params
@@ -267,38 +273,34 @@ class MarkovVariationalGP(
 
 
 def make_model(
-    N_obs_pts,
-    X,
-    Y,
-    R,
-    t,
-    var_y,
-    kern_time,
-    kern_space,
-    parallel=False,
-    z_fixed=None,
-    opt_z=True,
-    z_init=None,
-):
-    """
-    Create a spatiotemporal GP model
+    N_obs_pts: int,
+    X: jnp.ndarray,
+    Y: jnp.ndarray,
+    R: jnp.ndarray,
+    t: jnp.ndarray,
+    var_y: float,
+    kern_time: bayesnewton.kernels.Kernel,
+    kern_space: bayesnewton.kernels.Kernel,
+    parallel: bool = False,
+    z_fixed: Optional[jnp.ndarray] = None,
+    opt_z: bool = True,
+    z_init: Optional[jnp.ndarray] = None,
+) -> MarkovVariationalGP:
+    """Create a spatiotemporal GP model.
 
-    Args:
-        N_obs_pts: Number of observation points
-        X: Input locations
-        Y: Observations
-        R: Spatial locations
-        t: Time points
-        var_y: Observation noise variance
-        kern_time: Temporal kernel
-        kern_space: Spatial kernel
-        parallel: Whether to use parallel filtering
-        z_fixed: Fixed inducing points
-        opt_z: Whether to optimize inducing point locations
-        z_init: Initial inducing point locations
-
-    Returns:
-        model: The constructed GP model
+    :param N_obs_pts: Number of observation points
+    :param X: Input locations
+    :param Y: Observations
+    :param R: Spatial locations
+    :param t: Time points
+    :param var_y: Observation noise variance
+    :param kern_time: Temporal kernel
+    :param kern_space: Spatial kernel
+    :param parallel: Whether to use parallel filtering
+    :param z_fixed: Fixed inducing points
+    :param opt_z: Whether to optimize inducing point locations
+    :param z_init: Initial inducing point locations
+    :returns: The constructed GP model
     """
     num_z_space = N_obs_pts
 
@@ -336,20 +338,23 @@ def make_model(
     return model
 
 
-def make_model_sep_matern(N_obs_pts, X, Y, R, t, var_y):
-    """
-    Create a GP model with separable Matern kernels
+def make_model_sep_matern(
+    N_obs_pts: int,
+    X: jnp.ndarray,
+    Y: jnp.ndarray,
+    R: jnp.ndarray,
+    t: jnp.ndarray,
+    var_y: float,
+) -> MarkovVariationalGP:
+    """Create a GP model with separable Matern kernels.
 
-    Args:
-        N_obs_pts: Number of observation points
-        X: Input locations
-        Y: Observations
-        R: Spatial locations
-        t: Time points
-        var_y: Observation noise variance
-
-    Returns:
-        model: The constructed GP model with separable Matern kernels
+    :param N_obs_pts: Number of observation points
+    :param X: Input locations
+    :param Y: Observations
+    :param R: Spatial locations
+    :param t: Time points
+    :param var_y: Observation noise variance
+    :returns: The constructed GP model with separable Matern kernels
     """
     var_f = 1.0
 
@@ -370,20 +375,23 @@ def make_model_sep_matern(N_obs_pts, X, Y, R, t, var_y):
     )
 
 
-def make_model_matern(N_obs_pts, X, Y, R, t, var_y):
-    """
-    Create a GP model with Matern kernels
+def make_model_matern(
+    N_obs_pts: int,
+    X: jnp.ndarray,
+    Y: jnp.ndarray,
+    R: jnp.ndarray,
+    t: jnp.ndarray,
+    var_y: float,
+) -> MarkovVariationalGP:
+    """Create a GP model with Matern kernels.
 
-    Args:
-        N_obs_pts: Number of observation points
-        X: Input locations
-        Y: Observations
-        R: Spatial locations
-        t: Time points
-        var_y: Observation noise variance
-
-    Returns:
-        model: The constructed GP model with Matern kernels
+    :param N_obs_pts: Number of observation points
+    :param X: Input locations
+    :param Y: Observations
+    :param R: Spatial locations
+    :param t: Time points
+    :param var_y: Observation noise variance
+    :returns: The constructed GP model with Matern kernels
     """
     var_f = 1.0
 

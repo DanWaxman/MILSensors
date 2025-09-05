@@ -9,6 +9,7 @@ The kernels in this file are particularly focused on state-space representations
 of Gaussian processes, including quasi-periodic and subband formulations.
 """
 
+from typing import Optional, Tuple, Union
 from warnings import warn
 
 import bayesnewton
@@ -26,25 +27,26 @@ from jax.scipy.linalg import block_diag, cho_factor, cho_solve
 
 
 class QuasiPeriodicMatern32(bayesnewton.kernels.Kernel):
-    """
-    Quasi-periodic kernel in SDE form (product of Periodic and Matern-3/2).
+    """Quasi-periodic kernel in SDE form (product of Periodic and Matern-3/2).
+    
     Hyperparameters:
-        variance, σ²
-        lengthscale of Periodic, l_p
-        period, p
-        lengthscale of Matern, l_m
+        - variance, σ²
+        - lengthscale of Periodic, l_p
+        - period, p
+        - lengthscale of Matern, l_m
+    
     The associated continuous-time state space model matrices are constructed via
     a sum of cosines times a Matern-3/2.
     """
 
     def __init__(
         self,
-        variance=1.0,
-        lengthscale_periodic=1.0,
-        period=1.0,
-        lengthscale_matern=1.0,
-        order=6,
-    ):
+        variance: float = 1.0,
+        lengthscale_periodic: float = 1.0,
+        period: float = 1.0,
+        lengthscale_matern: float = 1.0,
+        order: int = 6,
+    ) -> None:
         self.transformed_lengthscale_periodic = objax.TrainVar(
             jnp.array(softplus_inv(lengthscale_periodic))
         )
@@ -84,22 +86,22 @@ class QuasiPeriodicMatern32(bayesnewton.kernels.Kernel):
         self.b_fmK_2igrid = b * (1.0 / factorial_mesh_K) * (2.0**-self.igrid)
 
     @property
-    def variance(self):
+    def variance(self) -> jnp.ndarray:
         return softplus(self.transformed_variance.value)
 
     @property
-    def lengthscale_periodic(self):
+    def lengthscale_periodic(self) -> jnp.ndarray:
         return softplus(self.transformed_lengthscale_periodic.value)
 
     @property
-    def lengthscale_matern(self):
+    def lengthscale_matern(self) -> jnp.ndarray:
         return softplus(self.transformed_lengthscale_matern.value)
 
     @property
-    def period(self):
+    def period(self) -> jnp.ndarray:
         return softplus(self.transformed_period.value)
 
-    def K(self, X, X2):
+    def K(self, X: jnp.ndarray, X2: jnp.ndarray) -> jnp.ndarray:
         r_per = (
             jnp.pi * jnp.sqrt(jnp.maximum(square_distance(X, X2), 1e-36)) / self.period
         )
@@ -113,7 +115,9 @@ class QuasiPeriodicMatern32(bayesnewton.kernels.Kernel):
         k_mat32 = (1.0 + sqrt3 * r_mat) * jnp.exp(-sqrt3 * r_mat)
         return self.variance * k_mat32 * k_per
 
-    def kernel_to_state_space(self, R=None):
+    def kernel_to_state_space(
+        self, R: Optional[jnp.ndarray] = None
+    ) -> Tuple[jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray, jnp.ndarray]:
         var_p = 1.0
         ell_p = self.lengthscale_periodic
         a = (
@@ -164,7 +168,7 @@ class QuasiPeriodicMatern32(bayesnewton.kernels.Kernel):
         )
         return F, L, Qc, H, Pinf
 
-    def stationary_covariance(self):
+    def stationary_covariance(self) -> jnp.ndarray:
         var_p = 1.0
         ell_p = self.lengthscale_periodic
         a = (
@@ -191,18 +195,17 @@ class QuasiPeriodicMatern32(bayesnewton.kernels.Kernel):
         )
         return Pinf
 
-    def measurement_model(self):
+    def measurement_model(self) -> jnp.ndarray:
         H_p = jnp.kron(jnp.ones([1, self.order + 1]), jnp.array([1.0, 0.0]))
         H_m = jnp.array([[1.0, 0.0]])
         H = jnp.kron(H_m, H_p)
         return H
 
-    def state_transition(self, dt):
-        """
-        Calculation of the closed form discrete-time state
-        transition matrix A = expm(FΔt) for the Quasi-Periodic Matern-3/2 prior
+    def state_transition(self, dt: jnp.ndarray) -> jnp.ndarray:
+        """Calculation of the closed form discrete-time state transition matrix A = expm(FΔt) for the Quasi-Periodic Matern-3/2 prior.
+        
         :param dt: step size(s), Δt = tₙ - tₙ₋₁ [M+1, 1]
-        :return: state transition matrix A [M+1, D, D]
+        :returns: state transition matrix A [M+1, D, D]
         """
         lam = jnp.sqrt(3.0) / self.lengthscale_matern
         # The angular frequency
@@ -219,14 +222,16 @@ class QuasiPeriodicMatern32(bayesnewton.kernels.Kernel):
         return A
 
     @staticmethod
-    def subband_mat32(dt, lam, omega):
+    def subband_mat32(
+        dt: jnp.ndarray, lam: jnp.ndarray, omega: jnp.ndarray
+    ) -> jnp.ndarray:
         R = rotation_matrix(dt, omega)
         Ri = jnp.block(
             [[(1.0 + dt * lam) * R, dt * R], [-dt * lam**2 * R, (1.0 - dt * lam) * R]]
         )
         return Ri
 
-    def feedback_matrix(self):
+    def feedback_matrix(self) -> jnp.ndarray:
         # The angular frequency
         omega = 2 * jnp.pi / self.period
         # The model
@@ -241,40 +246,48 @@ class QuasiPeriodicMatern32(bayesnewton.kernels.Kernel):
 
 
 class SubbandMatern32(bayesnewton.kernels.StationaryKernel):
-    """
-    Subband Matern-3/2 kernel in SDE form (product of Cosine and Matern-3/2).
+    """Subband Matern-3/2 kernel in SDE form (product of Cosine and Matern-3/2).
+    
     Hyperparameters:
-        variance, σ²
-        lengthscale, l
-        radial frequency, ω
+        - variance, σ²
+        - lengthscale, l
+        - radial frequency, ω
+    
     The associated continuous-time state space model matrices are constructed via
     kronecker sums and products of the Matern3/2 and cosine components:
-    letting λ = √3 / l
-    F      = F_mat3/2 ⊕ F_cos  =  ( 0     -ω     1     0
-                                    ω      0     0     1
-                                   -λ²     0    -2λ   -ω
-                                    0     -λ²    ω    -2λ )
-    L      = L_mat3/2 ⊗ I      =  ( 0      0
-                                    0      0
-                                    1      0
-                                    0      1 )
-    Qc     = I ⊗ Qc_mat3/2     =  ( 4λ³σ²  0
-                                    0      4λ³σ² )
-    H      = H_mat3/2 ⊗ H_cos  =  ( 1      0     0      0 )
-    Pinf   = Pinf_mat3/2 ⊗ I   =  ( σ²     0     0      0
-                                    0      σ²    0      0
-                                    0      0     3σ²/l² 0
-                                    0      0     0      3σ²/l²)
-    and the discrete-time transition matrix is (for step size Δt),
-    R = ( cos(ωΔt)   -sin(ωΔt)
-          sin(ωΔt)    cos(ωΔt) )
-    A = exp(-Δt/l) ( (1+Δtλ)R   ΔtR
-                     -Δtλ²R    (1-Δtλ)R )
+    letting λ = √3 / l::
+    
+        F      = F_mat3/2 ⊕ F_cos  =  ( 0     -ω     1     0
+                                        ω      0     0     1
+                                       -λ²     0    -2λ   -ω
+                                        0     -λ²    ω    -2λ )
+        L      = L_mat3/2 ⊗ I      =  ( 0      0
+                                        0      0
+                                        1      0
+                                        0      1 )
+        Qc     = I ⊗ Qc_mat3/2     =  ( 4λ³σ²  0
+                                        0      4λ³σ² )
+        H      = H_mat3/2 ⊗ H_cos  =  ( 1      0     0      0 )
+        Pinf   = Pinf_mat3/2 ⊗ I   =  ( σ²     0     0      0
+                                        0      σ²    0      0
+                                        0      0     3σ²/l² 0
+                                        0      0     0      3σ²/l²)
+    
+    and the discrete-time transition matrix is (for step size Δt)::
+    
+        R = ( cos(ωΔt)   -sin(ωΔt)
+              sin(ωΔt)    cos(ωΔt) )
+        A = exp(-Δt/l) ( (1+Δtλ)R   ΔtR
+                         -Δtλ²R    (1-Δtλ)R )
     """
 
     def __init__(
-        self, variance=1.0, lengthscale=1.0, radial_frequency=1.0, fix_variance=False
-    ):
+        self,
+        variance: float = 1.0,
+        lengthscale: float = 1.0,
+        radial_frequency: float = 1.0,
+        fix_variance: bool = False,
+    ) -> None:
         self.transformed_radial_frequency = objax.TrainVar(
             jnp.array(softplus_inv(radial_frequency))
         )
@@ -285,18 +298,18 @@ class SubbandMatern32(bayesnewton.kernels.StationaryKernel):
         self.state_dim = 4
 
     @property
-    def variance(self):
+    def variance(self) -> jnp.ndarray:
         return softplus(self.transformed_variance.value)
 
     @property
-    def lengthscale(self):
+    def lengthscale(self) -> jnp.ndarray:
         return softplus(self.transformed_lengthscale.value)
 
     @property
-    def radial_frequency(self):
+    def radial_frequency(self) -> jnp.ndarray:
         return softplus(self.transformed_radial_frequency.value)
 
-    def K_r(self, r):
+    def K_r(self, r: jnp.ndarray) -> jnp.ndarray:
         k_cos = jnp.cos(self.radial_frequency * r * self.lengthscale)
 
         sqrt3 = jnp.sqrt(3.0)
@@ -340,11 +353,10 @@ class SubbandMatern32(bayesnewton.kernels.StationaryKernel):
         return H
 
     def state_transition(self, dt):
-        """
-        Calculation of the closed form discrete-time state
-        transition matrix A = expm(FΔt) for the Subband Matern-3/2 prior
+        """Calculation of the closed form discrete-time state transition matrix A = expm(FΔt) for the Subband Matern-3/2 prior.
+        
         :param dt: step size(s), Δt = tₙ - tₙ₋₁ [1]
-        :return: state transition matrix A [4, 4]
+        :returns: state transition matrix A [4, 4]
         """
         lam = jnp.sqrt(3.0) / self.lengthscale
         R = rotation_matrix(dt, self.radial_frequency)
@@ -366,8 +378,7 @@ class SubbandMatern32(bayesnewton.kernels.StationaryKernel):
 
 
 class SpatioTemporalPartialOptKernel(bayesnewton.kernels.SpatioTemporalKernel):
-    """
-    The Spatio-Temporal GP class with partially optimized inducing points
+    """The Spatio-Temporal GP class with partially optimized inducing points.
 
     :param temporal_kernel: the temporal prior, must be a member of the Prior class
     :param spatial_kernel: the kernel used for the spatial dimensions
@@ -380,14 +391,14 @@ class SpatioTemporalPartialOptKernel(bayesnewton.kernels.SpatioTemporalKernel):
 
     def __init__(
         self,
-        temporal_kernel,
-        spatial_kernel,
-        z_train=None,
-        z_fixed=None,
-        conditional=None,
-        sparse=True,
-        spatial_dims=None,
-    ):
+        temporal_kernel: bayesnewton.kernels.Kernel,
+        spatial_kernel: bayesnewton.kernels.Kernel,
+        z_train: Optional[jnp.ndarray] = None,
+        z_fixed: Optional[jnp.ndarray] = None,
+        conditional: Optional[str] = None,
+        sparse: bool = True,
+        spatial_dims: Optional[int] = None,
+    ) -> None:
         self.temporal_kernel = temporal_kernel
         self.spatial_kernel = spatial_kernel
         if conditional is None:
@@ -431,13 +442,18 @@ class SpatioTemporalPartialOptKernel(bayesnewton.kernels.SpatioTemporalKernel):
             )
 
     @property
-    def z(self):
+    def z(self) -> jnp.ndarray:
         return jnp.concatenate((self.z_train.value, self.z_fixed.value), axis=0)
 
-    def spatial_conditional(self, X=None, R=None, predict=False):
-        """
-        Compute the spatial conditional, i.e. the measurement model projecting the latent function u(t) to f(X,R)
-            f(X,R) | u(t) ~ N(f(X,R) | B u(t), C)
+    def spatial_conditional(
+        self,
+        X: Optional[jnp.ndarray] = None,
+        R: Optional[jnp.ndarray] = None,
+        predict: bool = False,
+    ) -> Tuple[jnp.ndarray, jnp.ndarray]:
+        """Compute the spatial conditional, i.e. the measurement model projecting the latent function u(t) to f(X,R).
+        
+        f(X,R) | u(t) ~ N(f(X,R) | B u(t), C)
         """
         (
             Qzz,
@@ -461,16 +477,22 @@ class SpatioTemporalPartialOptKernel(bayesnewton.kernels.SpatioTemporalKernel):
             C = jnp.zeros([B.shape[0], B.shape[0]])
         return B, C
 
-    def inducing_precision(self):
-        """
-        Compute the covariance and precision of the inducing spatial points to be used during filtering
-        """
+    def inducing_precision(self) -> Tuple[jnp.ndarray, jnp.ndarray]:
+        """Compute the covariance and precision of the inducing spatial points to be used during filtering."""
         Kzz = self.spatial_kernel(self.z, self.z)
         Lzz, low = cho_factor(Kzz, lower=True)  # K_zz^(1/2)
         Qzz = cho_solve((Lzz, low), jnp.eye(self.M))  # K_zz^(-1)
         return Qzz, Lzz
 
-    def kernel_to_state_space(self, R=None):
+    def kernel_to_state_space(
+        self, R: Optional[jnp.ndarray] = None
+    ) -> Tuple[
+        jnp.ndarray,
+        Optional[jnp.ndarray],
+        Optional[jnp.ndarray],
+        jnp.ndarray,
+        jnp.ndarray,
+    ]:
         F_t, L_t, Qc_t, H_t, Pinf_t = self.temporal_kernel.kernel_to_state_space()
         Kzz = self.spatial_kernel(self.z, self.z)
         F = jnp.kron(jnp.eye(self.M), F_t)
@@ -482,37 +504,41 @@ class SpatioTemporalPartialOptKernel(bayesnewton.kernels.SpatioTemporalKernel):
 
 
 class SubbandMatern12(bayesnewton.kernels.StationaryKernel):
-    """
-    Subband Matern-1/2 (i.e. Exponential) kernel in SDE form (product of Cosine and Matern-1/2).
+    """Subband Matern-1/2 (i.e. Exponential) kernel in SDE form (product of Cosine and Matern-1/2).
+    
     Hyperparameters:
-        variance, σ²
-        lengthscale, l
-        radial frequency, ω
+        - variance, σ²
+        - lengthscale, l
+        - radial frequency, ω
+    
     The associated continuous-time state space model matrices are constructed via
-    kronecker sums and products of the exponential and cosine components:
-    F      = F_exp ⊕ F_cos  =  ( -1/l  -ω
-                                 ω     -1/l )
-    L      = L_exp ⊗ I      =  ( 1      0
-                                 0      1 )
-    Qc     = I ⊗ Qc_exp     =  ( 2σ²/l  0
-                                 0      2σ²/l )
-    H      = H_exp ⊗ H_cos  =  ( 1      0 )
-    Pinf   = Pinf_exp ⊗ I   =  ( σ²     0
-                                 0      σ² )
-    and the discrete-time transition matrix is (for step size Δt),
-    A      = exp(-Δt/l) ( cos(ωΔt)   -sin(ωΔt)
-                          sin(ωΔt)    cos(ωΔt) )
+    kronecker sums and products of the exponential and cosine components::
+    
+        F      = F_exp ⊕ F_cos  =  ( -1/l  -ω
+                                     ω     -1/l )
+        L      = L_exp ⊗ I      =  ( 1      0
+                                     0      1 )
+        Qc     = I ⊗ Qc_exp     =  ( 2σ²/l  0
+                                     0      2σ²/l )
+        H      = H_exp ⊗ H_cos  =  ( 1      0 )
+        Pinf   = Pinf_exp ⊗ I   =  ( σ²     0
+                                     0      σ² )
+    
+    and the discrete-time transition matrix is (for step size Δt)::
+    
+        A      = exp(-Δt/l) ( cos(ωΔt)   -sin(ωΔt)
+                              sin(ωΔt)    cos(ωΔt) )
     """
 
     def __init__(
         self,
-        variance=1.0,
-        lengthscale=1.0,
-        radial_frequency=1.0,
-        fix_variance=False,
-        fix_lengthscale=False,
-        fix_radial_frequency=False,
-    ):
+        variance: float = 1.0,
+        lengthscale: float = 1.0,
+        radial_frequency: float = 1.0,
+        fix_variance: bool = False,
+        fix_lengthscale: bool = False,
+        fix_radial_frequency: bool = False,
+    ) -> None:
         self.transformed_radial_frequency = objax.TrainVar(
             jnp.array(softplus_inv(radial_frequency))
         )
@@ -523,18 +549,18 @@ class SubbandMatern12(bayesnewton.kernels.StationaryKernel):
         self.state_dim = 2
 
     @property
-    def variance(self):
+    def variance(self) -> jnp.ndarray:
         return softplus(self.transformed_variance.value)
 
     @property
-    def lengthscale(self):
+    def lengthscale(self) -> jnp.ndarray:
         return softplus(self.transformed_lengthscale.value)
 
     @property
-    def radial_frequency(self):
+    def radial_frequency(self) -> jnp.ndarray:
         return softplus(self.transformed_radial_frequency.value)
 
-    def K_r(self, r):
+    def K_r(self, r: jnp.ndarray) -> jnp.ndarray:
         k_cos = jnp.cos(self.radial_frequency * r * self.lengthscale)
 
         k_mat = jnp.exp(-r)
@@ -569,20 +595,20 @@ class SubbandMatern12(bayesnewton.kernels.StationaryKernel):
         H = jnp.kron(H_mat, H_cos)
         return H
 
-    def state_transition(self, dt):
-        """
-        Calculation of the closed form discrete-time state
-        transition matrix A = expm(FΔt) for the Subband Matern-1/2 prior:
+    def state_transition(self, dt: jnp.ndarray) -> jnp.ndarray:
+        """Calculation of the closed form discrete-time state transition matrix A = expm(FΔt) for the Subband Matern-1/2 prior.
+        
         A = exp(-Δt/l) ( cos(ωΔt)   -sin(ωΔt)
                          sin(ωΔt)    cos(ωΔt) )
+        
         :param dt: step size(s), Δt = tₙ - tₙ₋₁ [1]
-        :return: state transition matrix A [2, 2]
+        :returns: state transition matrix A [2, 2]
         """
         R = rotation_matrix(dt, self.radial_frequency)
         A = jnp.exp(-dt / self.lengthscale) * R  # [2, 2]
         return A
 
-    def feedback_matrix(self):
+    def feedback_matrix(self) -> jnp.ndarray:
         F_mat = jnp.array([[-1.0 / self.lengthscale]])
         F_cos = jnp.array([[0.0, -self.radial_frequency], [self.radial_frequency, 0.0]])
         # F = (-1/l -ω
