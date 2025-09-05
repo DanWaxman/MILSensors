@@ -11,41 +11,39 @@ The module includes:
 """
 
 import time
+from typing import Optional, Tuple, Union
 
+import jax.numpy as jnp
 import numpy as np
 import objax
 from tqdm import tqdm
 
 
 def training(
-    model,
-    iters=150,
-    lr_adam=0.1,
-    lr_newton=1.0,
-    verbose=True,
-    batch_size=None,
-    N=None,
-    early_stopping=False,
-    optimize_all=True,
-    verbose_iter=50,
-):
-    """
-    Train a Gaussian Process model using a combination of Newton's method and Adam.
+    model: object,
+    iters: int = 150,
+    lr_adam: float = 0.1,
+    lr_newton: float = 1.0,
+    verbose: bool = True,
+    batch_size: Optional[int] = None,
+    N: Optional[int] = None,
+    early_stopping: bool = False,
+    optimize_all: bool = True,
+    verbose_iter: int = 50,
+) -> object:
+    """Train a Gaussian Process model using a combination of Newton's method and Adam.
 
-    Args:
-        model: The GP model to train
-        iters: Maximum number of training iterations
-        lr_adam: Learning rate for Adam optimizer (for hyperparameters)
-        lr_newton: Learning rate for Newton's method (for variational parameters)
-        verbose: Whether to print training progress
-        batch_size: Size of mini-batches (if None, use full dataset)
-        N: Total number of data points (required if using mini-batches)
-        early_stopping: Whether to stop training if loss increases
-        optimize_all: Whether to optimize all parameters (if False, kernel parameters are fixed)
-        verbose_iter: How often to print training progress
-
-    Returns:
-        The trained model
+    :param model: The GP model to train
+    :param iters: Maximum number of training iterations
+    :param lr_adam: Learning rate for Adam optimizer (for hyperparameters)
+    :param lr_newton: Learning rate for Newton's method (for variational parameters)
+    :param verbose: Whether to print training progress
+    :param batch_size: Size of mini-batches (if None, use full dataset)
+    :param N: Total number of data points (required if using mini-batches)
+    :param early_stopping: Whether to stop training if loss increases
+    :param optimize_all: Whether to optimize all parameters (if False, kernel parameters are fixed)
+    :param verbose_iter: How often to print training progress
+    :returns: The trained model
     """
     # Get model variables, but not kernel parameters
     if optimize_all:
@@ -113,41 +111,36 @@ def training(
 
 
 def eval_model(
-    model,
-    t_t,
-    R_t,
-    mus,
-    stds,
-    air_temp_timeseries,
-    N_t,
-    Y_t,
-    N_minibatch=200,
-    pseudo_lik_params=None,
-    variational_params=None,
-):
-    """
-    Evaluate a trained GP model on test data.
+    model: object,
+    t_t: jnp.ndarray,
+    R_t: jnp.ndarray,
+    mus: np.ndarray,
+    stds: np.ndarray,
+    air_temp_timeseries: np.ndarray,
+    N_t: int,
+    Y_t: np.ndarray,
+    N_minibatch: int = 200,
+    pseudo_lik_params: Optional[Tuple[jnp.ndarray, jnp.ndarray]] = None,
+    variational_params: Optional[Tuple[jnp.ndarray, jnp.ndarray]] = None,
+) -> Tuple[float, float, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Evaluate a trained GP model on test data.
 
-    Args:
-        model: The trained GP model
-        t_t: Test time points
-        R_t: Test spatial locations
-        mus: Mean values for normalization
-        stds: Standard deviations for normalization
-        air_temp_timeseries: Original temperature time series data
-        N_t: Number of test time points
-        Y_t: Test observations
-        N_minibatch: Size of mini-batches for prediction
-        pseudo_lik_params: Optional pre-computed pseudo-likelihood parameters
-        variational_params: Optional pre-computed variational parameters
-
-    Returns:
-        rmse: Root mean squared error
-        nlpd: Negative log predictive density
-        errors_gt_1: Boolean array indicating errors greater than 1°C
-        temps_gt_30: Boolean array indicating temperatures greater than 30°C
-        posterior_mean: Predicted mean values
-        posterior_var: Predicted variance values
+    :param model: The trained GP model
+    :param t_t: Test time points
+    :param R_t: Test spatial locations
+    :param mus: Mean values for normalization
+    :param stds: Standard deviations for normalization
+    :param air_temp_timeseries: Original temperature time series data
+    :param N_t: Number of test time points
+    :param Y_t: Test observations
+    :param N_minibatch: Size of mini-batches for prediction
+    :param pseudo_lik_params: Optional pre-computed pseudo-likelihood parameters
+    :param variational_params: Optional pre-computed variational parameters
+    :returns: Tuple containing (rmse, nlpd, errors_gt_1, temps_gt_30, posterior_mean, posterior_var)
+        where rmse is root mean squared error, nlpd is negative log predictive density,
+        errors_gt_1 is boolean array indicating errors greater than 1°C,
+        temps_gt_30 is boolean array indicating temperatures greater than 30°C,
+        posterior_mean is predicted mean values, and posterior_var is predicted variance values
     """
     N_rt = R_t.shape[1]
 
