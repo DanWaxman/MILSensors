@@ -120,9 +120,7 @@ def inference_loop(seed, N_inducing, N_t):
     )
 
     # Next, make the spatiotemporal grid
-    X, Y, R, t, X_t, Y_t, R_t, t_t = data_helper.make_grid(
-        X, Y, X_t, Y_t, air_temp_timeseries, N_t, mus, stds, N_sites
-    )
+    X, Y, R, t, X_t, Y_t, R_t, t_t = data_helper.make_grid(X, Y, X_t, Y_t)
 
     print("MUS", mus)
     print("STDS", stds)

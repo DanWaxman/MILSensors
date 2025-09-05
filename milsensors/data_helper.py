@@ -212,7 +212,7 @@ def create_dataset(
     return X, Y, X_t, Y_t, air_temp_timeseries, N_t, mus, stds, N_sites, sample_points
 
 
-def make_grid(X, Y, X_t, Y_t, air_temp_timeseries, N_t, mus, stds, N_sites):
+def make_grid(X, Y, X_t, Y_t):
     """
     Convert data into spatiotemporal grid format for GP models.
 

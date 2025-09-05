@@ -76,9 +76,7 @@ X, Y, X_test, Y_test, air_temp_timeseries, N_t, mus, stds, N_sites, sample_point
     )
 )
 
-X, Y, R, t, X_t, Y_t, R_t, t_t = data_helper.make_grid(
-    X, Y, X_test, Y_test, air_temp_timeseries, N_t, mus, stds, N_sites
-)
+X, Y, R, t, X_t, Y_t, R_t, t_t = data_helper.make_grid(X, Y, X_test, Y_test)
 R_full = np.copy(R)
 
 

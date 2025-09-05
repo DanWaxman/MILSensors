@@ -62,9 +62,7 @@ X, Y, X_test, Y_test, air_temp_timeseries, N_t, mus, stds, N_sites, sample_point
     )
 )
 
-X, Y, R, t, X_t, Y_t, R_t, t_t = data_helper.make_grid(
-    X, Y, X_test, Y_test, air_temp_timeseries, N_t, mus, stds, N_sites
-)
+X, Y, R, t, X_t, Y_t, R_t, t_t = data_helper.make_grid(X, Y, X_test, Y_test)
 R_full = np.copy(R)
 print("Total number of sites:", R_full[0].shape[0])
 
@@ -283,9 +281,7 @@ X, Y, X_test, Y_test, air_temp_timeseries, N_t, mus, stds, N_sites, sample_point
     )
 )
 
-X, Y, R, t, X_t, Y_t, R_t, t_t = data_helper.make_grid(
-    X, Y, X_test, Y_test, air_temp_timeseries, N_t, mus, stds, N_sites
-)
+X, Y, R, t, X_t, Y_t, R_t, t_t = data_helper.make_grid(X, Y, X_test, Y_test)
 R_full = np.copy(R)
 
 # add the new points to the initial training points
