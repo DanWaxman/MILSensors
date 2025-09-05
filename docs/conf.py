@@ -41,6 +41,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
+    'sphinx_autodoc_typehints',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -93,8 +94,13 @@ autodoc_mock_imports = [
     'tqdm',
 ]
 
-# Do not attempt to render type hints; avoids importing external types at build time
-autodoc_typehints = 'none'
+# Render type hints in parameter/return sections inferred from annotations
+autodoc_typehints = 'description'
+
+# sphinx-autodoc-typehints configuration
+typehints_use_signature = False
+typehints_document_rtype = True
+typehints_fully_qualified = False
 
 # -- Options for napoleon extension ------------------------------------------
 napoleon_google_docstring = False
