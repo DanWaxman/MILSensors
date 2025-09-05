@@ -8,7 +8,7 @@ It includes:
 - Helper functions to create different types of GP models with various kernels
 """
 
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 import bayesnewton
 import jax
@@ -25,7 +25,7 @@ class MarkovVariationalGP(
     bayesnewton.basemodels.MarkovGaussianProcess,
 ):
     """Markov variational Gaussian process: a VGP where the posterior is computed via (spatio-temporal) filtering and smoothing.
-    
+
     Based on the BayesNewton implementation, but allowing for prediction-time specification of variational parameters and pseudo-likelihood parameters.
 
     :param kernel: A kernel object

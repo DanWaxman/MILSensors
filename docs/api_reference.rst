@@ -34,6 +34,7 @@ Optimal Experimental Design
 .. toctree::
    :maxdepth: 1
 
+   modules/sensor_design
    modules/bayes_oed
 
 Module Index
@@ -43,6 +44,7 @@ Module Index
    :maxdepth: 2
 
    modules/data_helper
+   modules/sensor_design
    modules/bayes_oed
    modules/kernels
    modules/models

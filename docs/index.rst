@@ -8,7 +8,7 @@ What it provides
 
 * **Spatiotemporal GP models** with Matern, quasi-periodic, and subband kernel constructions
 * **Efficient variational inference** via Markov state-space GP filtering and smoothing
-* **Optimal experimental design** utilities for principled sensor placement
+* **Optimal experimental design (MIL)** utilities for principled sensor placement and sensor network design
 * **Data utilities** to prepare inputs for spatiotemporal modeling
 * **Modular components** that can be mixed-and-matched or extended
 
@@ -59,6 +59,7 @@ API Reference
    :caption: API Documentation:
 
    modules/data_helper
+   modules/sensor_design
    modules/bayes_oed
    modules/kernels
    modules/models

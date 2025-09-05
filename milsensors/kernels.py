@@ -9,7 +9,7 @@ The kernels in this file are particularly focused on state-space representations
 of Gaussian processes, including quasi-periodic and subband formulations.
 """
 
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 from warnings import warn
 
 import bayesnewton
@@ -28,13 +28,13 @@ from jax.scipy.linalg import block_diag, cho_factor, cho_solve
 
 class QuasiPeriodicMatern32(bayesnewton.kernels.Kernel):
     """Quasi-periodic kernel in SDE form (product of Periodic and Matern-3/2).
-    
+
     Hyperparameters:
         - variance, σ²
         - lengthscale of Periodic, l_p
         - period, p
         - lengthscale of Matern, l_m
-    
+
     The associated continuous-time state space model matrices are constructed via
     a sum of cosines times a Matern-3/2.
     """
@@ -203,7 +203,7 @@ class QuasiPeriodicMatern32(bayesnewton.kernels.Kernel):
 
     def state_transition(self, dt: jnp.ndarray) -> jnp.ndarray:
         """Calculation of the closed form discrete-time state transition matrix A = expm(FΔt) for the Quasi-Periodic Matern-3/2 prior.
-        
+
         :param dt: step size(s), Δt = tₙ - tₙ₋₁ [M+1, 1]
         :returns: state transition matrix A [M+1, D, D]
         """
@@ -247,16 +247,16 @@ class QuasiPeriodicMatern32(bayesnewton.kernels.Kernel):
 
 class SubbandMatern32(bayesnewton.kernels.StationaryKernel):
     """Subband Matern-3/2 kernel in SDE form (product of Cosine and Matern-3/2).
-    
+
     Hyperparameters:
         - variance, σ²
         - lengthscale, l
         - radial frequency, ω
-    
+
     The associated continuous-time state space model matrices are constructed via
     kronecker sums and products of the Matern3/2 and cosine components:
     letting λ = √3 / l::
-    
+
         F      = F_mat3/2 ⊕ F_cos  =  ( 0     -ω     1     0
                                         ω      0     0     1
                                        -λ²     0    -2λ   -ω
@@ -272,9 +272,9 @@ class SubbandMatern32(bayesnewton.kernels.StationaryKernel):
                                         0      σ²    0      0
                                         0      0     3σ²/l² 0
                                         0      0     0      3σ²/l²)
-    
+
     and the discrete-time transition matrix is (for step size Δt)::
-    
+
         R = ( cos(ωΔt)   -sin(ωΔt)
               sin(ωΔt)    cos(ωΔt) )
         A = exp(-Δt/l) ( (1+Δtλ)R   ΔtR
@@ -354,7 +354,7 @@ class SubbandMatern32(bayesnewton.kernels.StationaryKernel):
 
     def state_transition(self, dt):
         """Calculation of the closed form discrete-time state transition matrix A = expm(FΔt) for the Subband Matern-3/2 prior.
-        
+
         :param dt: step size(s), Δt = tₙ - tₙ₋₁ [1]
         :returns: state transition matrix A [4, 4]
         """
@@ -452,7 +452,7 @@ class SpatioTemporalPartialOptKernel(bayesnewton.kernels.SpatioTemporalKernel):
         predict: bool = False,
     ) -> Tuple[jnp.ndarray, jnp.ndarray]:
         """Compute the spatial conditional, i.e. the measurement model projecting the latent function u(t) to f(X,R).
-        
+
         f(X,R) | u(t) ~ N(f(X,R) | B u(t), C)
         """
         (
@@ -505,15 +505,15 @@ class SpatioTemporalPartialOptKernel(bayesnewton.kernels.SpatioTemporalKernel):
 
 class SubbandMatern12(bayesnewton.kernels.StationaryKernel):
     """Subband Matern-1/2 (i.e. Exponential) kernel in SDE form (product of Cosine and Matern-1/2).
-    
+
     Hyperparameters:
         - variance, σ²
         - lengthscale, l
         - radial frequency, ω
-    
+
     The associated continuous-time state space model matrices are constructed via
     kronecker sums and products of the exponential and cosine components::
-    
+
         F      = F_exp ⊕ F_cos  =  ( -1/l  -ω
                                      ω     -1/l )
         L      = L_exp ⊗ I      =  ( 1      0
@@ -523,9 +523,9 @@ class SubbandMatern12(bayesnewton.kernels.StationaryKernel):
         H      = H_exp ⊗ H_cos  =  ( 1      0 )
         Pinf   = Pinf_exp ⊗ I   =  ( σ²     0
                                      0      σ² )
-    
+
     and the discrete-time transition matrix is (for step size Δt)::
-    
+
         A      = exp(-Δt/l) ( cos(ωΔt)   -sin(ωΔt)
                               sin(ωΔt)    cos(ωΔt) )
     """
@@ -597,10 +597,10 @@ class SubbandMatern12(bayesnewton.kernels.StationaryKernel):
 
     def state_transition(self, dt: jnp.ndarray) -> jnp.ndarray:
         """Calculation of the closed form discrete-time state transition matrix A = expm(FΔt) for the Subband Matern-1/2 prior.
-        
+
         A = exp(-Δt/l) ( cos(ωΔt)   -sin(ωΔt)
                          sin(ωΔt)    cos(ωΔt) )
-        
+
         :param dt: step size(s), Δt = tₙ - tₙ₋₁ [1]
         :returns: state transition matrix A [2, 2]
         """

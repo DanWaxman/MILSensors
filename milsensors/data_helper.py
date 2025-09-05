@@ -11,7 +11,7 @@ The module includes:
 """
 
 import warnings
-from typing import Optional, Tuple, Union
+from typing import Tuple
 
 import bayesnewton
 import numpy as np
