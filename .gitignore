@@ -173,6 +173,8 @@ cython_debug/
 # Data files
 *.csv
 *.npz
+!data/WRF_data_2013_phoenix.npz
+!data/synthetic_temp_timeseries.npz
 *results*
 
 # Cache files
