@@ -1,7 +1,11 @@
 [project]
 name = "milsensors"
 version = "0.1.0"
-description = "Add your description here"
+authors = [
+  {name = "Daniel Waxman", email = "daniel.waxman@stonybrook.edu"},
+  {name = "Fernando Llorente", email = "fllorente@bnl.gov"},
+]
+description = "A Python toolkit for selecting optimal sensor networks in spatiotemporal settings by minimizing information loss from emulators."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -12,6 +16,7 @@ dependencies = [
     "scipy==1.11.3",
     "uncertainty-toolbox>=0.1.1",
 ]
+license = "MIT"
 
 
 [tool.setuptools.packages.find]
