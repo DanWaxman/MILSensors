@@ -9,9 +9,12 @@ description = "A Python toolkit for selecting optimal sensor networks in spatiot
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "bayesnewton>=1.3.4",
     "jax==0.4.6",
     "jaxlib==0.4.6",
+    "numba>=0.62.0",
     "numpy<2",
+    "objax>=1.7.0",
     "osmnx>=2.0.6",
     "scipy==1.11.3",
     "uncertainty-toolbox>=0.1.1",
