@@ -30,10 +30,11 @@ where `<N_runs>` is the number of runs of the optimization, `<N_sites_to_try>` i
 ## Citation
 If you use this code, please cite the paper as follows:
 ```bibtex
-@misc{waxman2025designing,
+@article{waxman2025designing,
   title={Designing an Optimal Sensor Network via Minimizing Information Loss},
   author={Waxman, Daniel and Llorente, Fernando and Lamer, Katia and Djuric, Petar M.},
   year={2025},
-  note={Under Review}
+  journal={Bayesian Analysis},
+  note={Accepted.}
 }
 ```
