@@ -1,9 +1,11 @@
+[![arXiv](https://img.shields.io/badge/arXiv-2512.05940-b31b1b.svg)](https://arxiv.org/abs/2512.05940)
+
 # Designing an Optimal Sensor Network via Minimizing Information Loss
 
-This repository contains the code for the paper "Designing an Optimal Sensor Network via Minimizing Information Loss", currently under review, which proposes a model-based sensor placement criterion based on variational spatiotemporal Gaussian processes.
+This repository contains the code for the paper "Designing an Optimal Sensor Network via Minimizing Information Loss", to appear in *Bayesian Analysis*, which proposes a model-based sensor placement criterion based on variational spatiotemporal Gaussian processes. The paper is also available [on the arXiv](https://arxiv.org/abs/2512.05940).
 
 ## Paper Abstract
-Optimal experimental design is a classic topic in statistics, with many well-studied problems, applications, and solutions. The design problem we study is the placement of sensors to monitor spatiotemporal processes, explicitly accounting for the temporal dimension in our modeling and optimization. We observe that recent advancements in computational sciences often yield large datasets based on physics-based simulations, which are rarely leveraged in experimental design. We introduce a novel model-based sensor placement criterion, along with a highly-efficient optimization algorithm, which integrates physics-based simulations and Bayesian experimental design principles to identify sensor networks that "minimize information loss" from simulated data. Our technique relies on sparse variational inference and Gauss-Markov priors, and thus may adapt many techniques from Bayesian experimental design. We validate our method through a case study monitoring air temperature in Phoenix, Arizona, using state-of-the-art physics-based simulations. Our results show our framework to be superior to random or quasi-random sampling, particularly with a limited number of sensors. We conclude by discussing practical considerations and implications of our framework, including more complex modeling tools and real-world deployments.
+Optimal experimental design is a classic topic in statistics, with many well-studied problems, applications, and solutions. The design problem we study is the placement of sensors to monitor spatiotemporal processes, explicitly accounting for the temporal dimension in our modeling and optimization. We observe that recent advancements in computational sciences often yield large datasets based on physics-based simulations, which are rarely leveraged in experimental design. We introduce a novel model-based sensor placement criterion, along with a highly-efficient optimization algorithm, which integrates physics-based simulations and Bayesian experimental design principles to identify sensor networks that "minimize information loss" from simulated data. Our technique relies on sparse variational inference and (separable) Gauss-Markov priors, and thus may adapt many techniques from Bayesian experimental design. We validate our method through a case study monitoring air temperature in Phoenix, Arizona, using state-of-the-art physics-based simulations. Our results show our framework to be superior to random or quasi-random sampling, particularly with a limited number of sensors. We conclude by discussing practical considerations and implications of our framework, including more complex modeling tools and real-world deployments. 
 
 ## Project Overview
 This project implements the methodology described in the paper "Designing an Optimal Sensor Network via Minimizing Information Loss". The codebase is structured to facilitate the design and evaluation of sensor networks for monitoring spatiotemporal processes, with a focus on minimizing information loss. 
@@ -33,8 +35,8 @@ If you use this code, please cite the paper as follows:
 @article{waxman2025designing,
   title={Designing an Optimal Sensor Network via Minimizing Information Loss},
   author={Waxman, Daniel and Llorente, Fernando and Lamer, Katia and Djuric, Petar M.},
-  year={2025},
+  year={2026},
   journal={Bayesian Analysis},
-  note={Accepted.}
+  note={To Appear.}
 }
 ```
