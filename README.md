@@ -2,7 +2,21 @@
 
 # Designing an Optimal Sensor Network via Minimizing Information Loss
 
-This repository contains the code for the paper "Designing an Optimal Sensor Network via Minimizing Information Loss", to appear in *Bayesian Analysis*, which proposes a model-based sensor placement criterion based on variational spatiotemporal Gaussian processes. The paper is also available [on the arXiv](https://arxiv.org/abs/2512.05940).
+This repository contains the code for the paper "Designing an Optimal Sensor Network via Minimizing Information Loss", available in [Bayesian Analysis](https://projecteuclid.org/journals/bayesian-analysis/advance-publication/Designing-an-Optimal-Sensor-Network-via-Minimizing-Information-Loss/10.1214/25-BA1574.full), which proposes a model-based sensor placement criterion based on variational spatiotemporal Gaussian processes. The paper is also available [on the arXiv](https://arxiv.org/abs/2512.05940). 
+
+If you find the paper or code helpful in your research, please consider citing the paper:
+```
+@article{waxman2025milsensors,
+author = {Daniel Waxman and Fernando Llorente and Katia Lamer and Petar M. Djurić},
+title = {{Designing an Optimal Sensor Network via Minimizing Information Loss}},
+journal = {Bayesian Analysis},
+publisher = {International Society for Bayesian Analysis},
+pages = {1 -- 29},
+year = {2025},
+doi = {10.1214/25-BA1574},
+URL = {https://doi.org/10.1214/25-BA1574}
+}
+```
 
 ## Paper Abstract
 Optimal experimental design is a classic topic in statistics, with many well-studied problems, applications, and solutions. The design problem we study is the placement of sensors to monitor spatiotemporal processes, explicitly accounting for the temporal dimension in our modeling and optimization. We observe that recent advancements in computational sciences often yield large datasets based on physics-based simulations, which are rarely leveraged in experimental design. We introduce a novel model-based sensor placement criterion, along with a highly-efficient optimization algorithm, which integrates physics-based simulations and Bayesian experimental design principles to identify sensor networks that "minimize information loss" from simulated data. Our technique relies on sparse variational inference and (separable) Gauss-Markov priors, and thus may adapt many techniques from Bayesian experimental design. We validate our method through a case study monitoring air temperature in Phoenix, Arizona, using state-of-the-art physics-based simulations. Our results show our framework to be superior to random or quasi-random sampling, particularly with a limited number of sensors. We conclude by discussing practical considerations and implications of our framework, including more complex modeling tools and real-world deployments. 
